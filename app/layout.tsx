@@ -19,8 +19,14 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: 'Celengin - Capai Tabungan & Impianmu',
+  title: {
+    default: 'Celengin',
+    template: '%s - Celengin'
+  },
   description: 'Celengin - Aplikasi celengan digital yang bikin kamu semangat nabung. Pantau target, lacak progres, raih impianmu!',
+  icons: {
+    icon: '/icon.svg',
+  },
 }
 
 export default function RootLayout({

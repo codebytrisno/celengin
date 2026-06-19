@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
 import { CelenginIcon } from '@/components/ui/celengin-icon'
 import { Button } from '@/components/ui/button'
-import { User, Menu, X, LayoutDashboard, Home, LogOut, Moon, Sun, Globe } from 'lucide-react'
+import { User, Menu, X, LayoutDashboard, Home, LogOut, Moon, Sun, Globe, Heart } from 'lucide-react'
 import { useTheme } from '@/lib/theme/theme-context'
 import { useLanguage } from '@/lib/i18n/language-context'
 
@@ -74,6 +74,15 @@ export function Navbar() {
                 <Link href="/dashboard" className="text-sm font-medium text-slate-600 hover:text-teal-500 dark:text-slate-400 dark:hover:text-teal-400 transition-colors">
                   Dashboard
                 </Link>
+                <a 
+                  href="https://sociabuzz.com/trisnosanjaya" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-xs font-semibold shadow-sm hover:shadow-md transition-all"
+                >
+                  <Heart className="h-3.5 w-3.5 fill-current" />
+                  <span>Donasi</span>
+                </a>
                 {!isDashboard && (
                 <div className="flex items-center gap-2">
                   {/* Profile Avatar */}
@@ -171,6 +180,15 @@ export function Navbar() {
                       <Home className="h-5 w-5" />
                       <span className="font-medium">Beranda</span>
                     </Link>
+                    <a
+                      href="https://sociabuzz.com/trisnosanjaya"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white transition-all shadow-sm"
+                    >
+                      <Heart className="h-5 w-5 fill-current" />
+                      <span className="font-semibold">Donasi</span>
+                    </a>
                     <button
                       onClick={signOut}
                       className="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors w-full text-left dark:text-red-400 dark:hover:bg-red-900/30"

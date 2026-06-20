@@ -1,12 +1,13 @@
 # 💰 Celengin
 
-**Celengin** adalah aplikasi tabungan digital modern yang membantu kamu mencapai target finansial dengan cara yang menyenangkan dan interaktif.
+**Celengin** adalah aplikasi tabungan digital modern yang membantu kamu mencapai target finansial dengan cara yang menyenangkan dan interaktif. Tersedia sebagai **web app** dan **Android app native**.
 
-![Next.js](https://img.shields.io/badge/Next.js-15.1.4-black?style=flat-square&logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?style=flat-square&logo=next.js)
 ![React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-blue?style=flat-square&logo=typescript)
 ![Supabase](https://img.shields.io/badge/Supabase-Auth%20%26%20DB-green?style=flat-square&logo=supabase)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=flat-square&logo=tailwind-css)
+![Tauri](https://img.shields.io/badge/Tauri-2-FFC131?style=flat-square&logo=tauri)
 
 ---
 
@@ -20,6 +21,7 @@
 - 📱 **Responsive Design** — Seamless di desktop, tablet, dan mobile
 - ⚡ **Real-time Updates** — Data sinkron otomatis tanpa reload halaman
 - 🎨 **Modern Icons** — 24 Lucide icons yang clean & konsisten
+- 📲 **Android App** — Native Android app built with Tauri 2 (WebView hybrid)
 
 ---
 
@@ -131,14 +133,15 @@ Buka [http://localhost:3000](http://localhost:3000) di browser.
 
 | Layer | Technology |
 |-------|-----------|
-| **Framework** | Next.js 15 (App Router) |
+| **Framework** | Next.js 16 (App Router) |
 | **UI Library** | React 19 |
-| **Language** | TypeScript 5 |
+| **Language** | TypeScript 6 |
 | **Styling** | Tailwind CSS 4.0 |
 | **Icons** | Lucide React |
 | **Charts** | Recharts |
 | **Backend** | Supabase (Auth + PostgreSQL) |
 | **Storage** | Supabase Storage |
+| **Mobile** | Tauri 2 (Android) |
 | **Deployment** | Vercel (recommended) |
 
 ---
@@ -227,6 +230,46 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 npm run build
 npm run start
 ```
+
+---
+
+## 📱 Android App
+
+Celengin tersedia sebagai native Android app menggunakan **Tauri 2** dengan arsitektur hybrid WebView.
+
+### Download APK
+
+📥 [Download Celengin Android (ARM64)](https://github.com/TrisnoSanjaya/celengin/releases)
+
+**Cara Install:**
+1. Download APK dari Releases
+2. Transfer ke HP Android
+3. Buka file manager dan tap APK
+4. Allow "Install from Unknown Sources"
+5. Install dan buka app
+
+### Build Android dari Source
+
+Lihat dokumentasi lengkap di [TAURI_SETUP.md](./TAURI_SETUP.md) untuk:
+- Setup Tauri 2 development environment
+- Build APK untuk testing
+- Build release APK untuk production
+- Sign APK untuk Google Play Store
+
+**Quick build:**
+```bash
+# Copy Rust library
+mkdir -p src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a
+cp src-tauri/target/aarch64-linux-android/release/libapp_lib.so src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/
+
+# Build APK
+cd src-tauri/gen/android
+export JAVA_HOME="C:/Program Files/Android/Android Studio/jbr"
+export ANDROID_HOME="$HOME/AppData/Local/Android/Sdk"
+./gradlew assembleArm64Release -x rustBuildArm64Release -x rustBuildArmRelease
+```
+
+**Catatan:** Android app adalah WebView yang load web app dari Vercel. App butuh koneksi internet untuk jalan.
 
 ---
 

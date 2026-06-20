@@ -25,7 +25,9 @@ export const metadata: Metadata = {
   },
   description: 'Celengin - Aplikasi celengan digital yang bikin kamu semangat nabung. Pantau target, lacak progres, raih impianmu!',
   icons: {
-    icon: '/icon.svg',
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
   },
 }
 

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Celengin</string>
+    <string name="title_activity_main">Celengin</string>
+    <string name="package_name">com.celengin.app</string>
+    <string name="custom_url_scheme">com.celengin.app</string>
+</resources>

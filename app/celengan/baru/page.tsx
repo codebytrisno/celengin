@@ -5,66 +5,19 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/auth-context'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Sparkles, ImagePlus, X, Link2, Loader2 } from 'lucide-react'
-import { CELENGAN_ICONS, CelenganIconRenderer } from '@/lib/celengan-icons'
+import { CELENGAN_ICONS } from '@/lib/celengan-icons'
+import { createCelengan } from '@/lib/db'
+import { compressImage, blobToBase64 } from '@/lib/image'
 
 const CATEGORIES = [
   'Elektronik', 'Kendaraan', 'Properti', 'Pendidikan',
   'Liburan', 'Kesehatan', 'Investasi', 'Hobi', 'Keluarga', 'Lainnya',
 ]
 
-function compressImage(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-
-      let { width, height } = img
-      const MAX = 1200
-      if (width > MAX || height > MAX) {
-        if (width > height) {
-          height = Math.round((height / width) * MAX)
-          width = MAX
-        } else {
-          width = Math.round((width / height) * MAX)
-          height = MAX
-        }
-      }
-
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')!
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = 'high'
-      ctx.drawImage(img, 0, 0, width, height)
-
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob)
-          else reject(new Error('Gagal kompres'))
-        },
-        'image/webp',
-        0.7
-      )
-    }
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Gagal load'))
-    }
-
-    img.src = url
-  })
-}
-
 export default function BaruCelenganPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const supabase = createClient()
   const [title, setTitle] = useState('')
   const [targetAmount, setTargetAmount] = useState('')
   const [selectedIcon, setSelectedIcon] = useState('wallet')
@@ -72,13 +25,16 @@ export default function BaruCelenganPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageDataUrl, setImageDataUrl] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [useUrlInput, setUseUrlInput] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [fileInputKey, setFileInputKey] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    document.title = 'Buat Celengan Baru - Celengin'
+  }, [])
 
   if (authLoading) {
     return (
@@ -96,25 +52,16 @@ export default function BaruCelenganPage() {
     return null
   }
 
-  useEffect(() => {
-    document.title = 'Buat Celengan Baru - Celengin'
-  }, [])
-
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
     try {
       const compressedBlob = await compressImage(file)
-      const compressedFile = new File(
-        [compressedBlob],
-        file.name.replace(/\.[^.]+$/, '.webp'),
-        { type: 'image/webp' }
-      )
-
-      const previewUrl = URL.createObjectURL(compressedFile)
-      setImageFile(compressedFile)
+      const previewUrl = URL.createObjectURL(compressedBlob)
+      const base64 = await blobToBase64(compressedBlob)
       setImagePreview(previewUrl)
+      setImageDataUrl(base64)
       setImageUrl('')
       setError('')
     } catch {
@@ -123,39 +70,11 @@ export default function BaruCelenganPage() {
   }
 
   function removeImage() {
-    setImageFile(null)
     if (imagePreview) URL.revokeObjectURL(imagePreview)
     setImagePreview(null)
+    setImageDataUrl('')
     setImageUrl('')
     setFileInputKey(k => k + 1)
-  }
-
-  async function uploadImage(): Promise<string | null> {
-    if (!imageFile || !user) return null
-
-    setUploading(true)
-    const fileName = `${user.id}/${Date.now()}.webp`
-
-    const { data, error: uploadErr } = await supabase.storage
-      .from('celengin-images')
-      .upload(fileName, imageFile, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: 'image/webp',
-      })
-
-    setUploading(false)
-
-    if (uploadErr) {
-      console.warn('Upload ke Supabase Storage gagal:', uploadErr.message)
-      return null
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('celengin-images')
-      .getPublicUrl(data.path)
-
-    return publicUrl
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -169,35 +88,19 @@ export default function BaruCelenganPage() {
     setSubmitting(true)
     setError('')
 
-    let finalImageUrl = imageUrl || null
-    if (imageFile) {
-      const uploaded = await uploadImage()
-      if (uploaded) {
-        finalImageUrl = uploaded
-      }
-    }
+    const finalImageUrl = imageDataUrl || imageUrl || null
 
-    const celenganId = crypto.randomUUID()
-
-    const { error: dbError } = await supabase.from('celengans').insert({
-      id: celenganId,
-      user_id: user.id,
+    const celengan = createCelengan({
       title: title.trim(),
       target_amount: nominal,
       icon: selectedIcon,
       category,
       image_url: finalImageUrl,
+      user_id: user.id,
     })
 
     setSubmitting(false)
-
-    if (dbError) {
-      setError(`Gagal membuat celengan: ${dbError.message}`)
-      return
-    }
-
-    router.push(`/celengan/${celenganId}`)
-    router.refresh()
+    router.push(`/celengan?id=${celengan.id}`)
   }
 
   function formatInput(value: string) {
@@ -222,7 +125,6 @@ export default function BaruCelenganPage() {
           <p className="text-slate-500 dark:text-slate-400 mt-2">Buat target tabungan baru untuk impianmu</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Gambar Motivasi */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Gambar Motivasi</label>
 
@@ -305,7 +207,6 @@ export default function BaruCelenganPage() {
               )}
             </div>
 
-            {/* Nama Celengan */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nama Celengan *</label>
               <input
@@ -318,7 +219,6 @@ export default function BaruCelenganPage() {
               />
             </div>
 
-            {/* Target Nominal */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Target Nominal *</label>
               <div className="relative">
@@ -334,7 +234,6 @@ export default function BaruCelenganPage() {
               </div>
             </div>
 
-            {/* Icon Picker */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Pilih Icon</label>
               <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
@@ -373,7 +272,6 @@ export default function BaruCelenganPage() {
               </div>
             </div>
 
-            {/* Category */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Kategori</label>
               <div className="flex flex-wrap gap-2">
@@ -394,25 +292,23 @@ export default function BaruCelenganPage() {
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-medium">
                 {error}
               </div>
             )}
 
-            {/* Submit */}
             <div className="flex gap-3 pt-4">
               <Link href="/dashboard" className="flex-1">
                 <Button type="button" variant="outline" size="lg" className="w-full">
                   Batal
                 </Button>
               </Link>
-              <Button type="submit" variant="clay" size="lg" className="flex-1" disabled={submitting || uploading}>
-                {submitting || uploading ? (
+              <Button type="submit" variant="clay" size="lg" className="flex-1" disabled={submitting}>
+                {submitting ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {uploading ? 'Upload Gambar...' : 'Menyimpan...'}
+                    Menyimpan...
                   </span>
                 ) : (
                   'Buat Celengan'

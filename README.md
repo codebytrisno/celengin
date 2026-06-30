@@ -1,312 +1,108 @@
-# 💰 Celengin
+# Celengin
 
-**Celengin** adalah aplikasi tabungan digital modern yang membantu kamu mencapai target finansial dengan cara yang menyenangkan dan interaktif. Tersedia sebagai **web app** dan **Android app native**.
+**Celengin** adalah aplikasi tabungan digital yang membantu kamu mencapai target finansial dengan cara yang menyenangkan. **Offline-First** — semua data disimpan di lokal, tidak butuh server.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?style=flat-square&logo=next.js)
 ![React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-blue?style=flat-square&logo=typescript)
-![Supabase](https://img.shields.io/badge/Supabase-Auth%20%26%20DB-green?style=flat-square&logo=supabase)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=flat-square&logo=tailwind-css)
-![Tauri](https://img.shields.io/badge/Tauri-2-FFC131?style=flat-square&logo=tauri)
+![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?style=flat-square&logo=capacitor)
 
----
+## Fitur Utama
 
-## ✨ Fitur Utama
+- **Offline-First** — Semua data di localStorage, ngga perlu koneksi internet
+- **Kelola Target Tabungan** — Buat celengan dengan target nominal, icon, dan gambar
+- **Transaksi Mudah** — Deposit dan withdraw dengan format Rupiah
+- **Visualisasi Progress** — Grafik interaktif dari Recharts
+- **Dark Mode** — UI modern dengan dark mode penuh
+- **Import/Export Data** — Backup JSON dan ekspor CSV (merge atau replace)
+- **Android App** — APK signed siap install via Capacitor
 
-- 🎯 **Kelola Target Tabungan** — Buat celengan dengan target nominal, icon custom, dan gambar motivasi
-- 💸 **Transaksi Mudah** — Deposit dan withdraw dengan input format Rupiah yang user-friendly
-- 📊 **Visualisasi Progress** — Grafik interaktif untuk tracking perjalanan tabunganmu
-- 🌙 **Dark Mode** — UI modern dengan dukungan dark mode penuh
-- 🔐 **Authentication** — Sign up/sign in aman dengan Supabase Auth
-- 📱 **Responsive Design** — Seamless di desktop, tablet, dan mobile
-- ⚡ **Real-time Updates** — Data sinkron otomatis tanpa reload halaman
-- 🎨 **Modern Icons** — 24 Lucide icons yang clean & konsisten
-- 📲 **Android App** — Native Android app built with Tauri 2 (WebView hybrid)
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+ dan npm/pnpm/yarn
-- Akun Supabase (gratis di [supabase.com](https://supabase.com))
-
-### Installation
+## Quick Start
 
 ```bash
-# Clone repository
 git clone https://github.com/TrisnoSanjaya/celengin.git
 cd celengin
-
-# Install dependencies
 npm install
-
-# Setup environment variables
-cp .env.example .env.local
-# Edit .env.local dengan Supabase credentials kamu
-```
-
-### Database Setup
-
-Jalankan SQL berikut di Supabase SQL Editor:
-
-```sql
--- Tabel Celengans
-create table celengans (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users not null,
-  title text not null,
-  target_amount bigint not null,
-  collected bigint default 0,
-  icon text default 'wallet',
-  category text default 'Lainnya',
-  image_url text,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
-);
-
--- Tabel Transactions
-create table transactions (
-  id uuid primary key default gen_random_uuid(),
-  celengan_id uuid references celengans(id) on delete cascade not null,
-  amount bigint not null,
-  type text check (type in ('deposit', 'withdraw')) not null,
-  description text,
-  created_at timestamp with time zone default now()
-);
-
--- Enable RLS
-alter table celengans enable row level security;
-alter table transactions enable row level security;
-
--- Policies untuk celengans
-create policy "Users can view own celengans"
-  on celengans for select
-  using (auth.uid() = user_id);
-
-create policy "Users can create own celengans"
-  on celengans for insert
-  with check (auth.uid() = user_id);
-
-create policy "Users can update own celengans"
-  on celengans for update
-  using (auth.uid() = user_id);
-
-create policy "Users can delete own celengans"
-  on celengans for delete
-  using (auth.uid() = user_id);
-
--- Policies untuk transactions
-create policy "Users can view transactions of own celengans"
-  on transactions for select
-  using (
-    exists (
-      select 1 from celengans
-      where celengans.id = transactions.celengan_id
-      and celengans.user_id = auth.uid()
-    )
-  );
-
-create policy "Users can create transactions for own celengans"
-  on transactions for insert
-  with check (
-    exists (
-      select 1 from celengans
-      where celengans.id = transactions.celengan_id
-      and celengans.user_id = auth.uid()
-    )
-  );
-```
-
-### Run Development Server
-
-```bash
 npm run dev
 ```
 
-Buka [http://localhost:3000](http://localhost:3000) di browser.
+Buka [http://localhost:3000](http://localhost:3000).
 
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| **Framework** | Next.js 16 (App Router) |
-| **UI Library** | React 19 |
+| **Framework** | Next.js 16 (App Router, static export) |
+| **UI** | React 19 + Tailwind CSS 4 |
 | **Language** | TypeScript 6 |
-| **Styling** | Tailwind CSS 4.0 |
 | **Icons** | Lucide React |
 | **Charts** | Recharts |
-| **Backend** | Supabase (Auth + PostgreSQL) |
-| **Storage** | Supabase Storage |
-| **Mobile** | Tauri 2 (Android) |
-| **Deployment** | Vercel (recommended) |
+| **Storage** | localStorage (Offline-First) |
+| **Mobile** | Capacitor 8 (Android) |
+| **Auth** | Lokal (tanpa server) |
 
----
-
-## 📂 Project Structure
+## Project Structure
 
 ```
-celengan_digital/
 ├── app/                    # Next.js App Router pages
-│   ├── celengan/          # Celengan CRUD pages
-│   ├── dashboard/         # Dashboard user
-│   ├── sign-in/           # Auth pages
-│   └── sign-up/
+│   ├── celengan/          # Detail & edit celengan (query params)
+│   ├── celengan/baru/     # Buat celengan baru
+│   ├── dashboard/         # Dashboard, target, aktivitas, pengaturan
+│   ├── sign-in/ & sign-up/ # Auth lokal
 ├── components/            # React components
-│   ├── dashboard/         # Dashboard-specific
-│   ├── layout/            # Navbar, Footer
+│   ├── dashboard/         # Celengan card, charts, sidebar
+│   ├── layout/            # Navbar
 │   └── ui/                # Reusable UI (Button, Card, Dialog)
-├── lib/                   # Utilities & configs
-│   ├── auth/              # Auth context
-│   ├── supabase/          # Supabase client & types
-│   └── celengan-icons.tsx # Icon utilities
-└── public/                # Static assets
+├── lib/
+│   ├── db.ts              # localStorage database layer (CRUD)
+│   ├── backup.ts          # Export/import JSON & CSV
+│   ├── image.ts           # Kompresi gambar ke WebP base64
+│   └── auth/              # Auth context (lokal)
+└── scripts/               # Tools (generate-icons.mjs)
 ```
 
----
+## Android App
 
-## 🎨 Features Breakdown
+Celengin bisa dibuild sebagai Android app menggunakan **Capacitor 8**.
 
-### 1. Dashboard
-- Overview semua celengan
-- Progress bar & status (aktif/tercapai)
-- Quick actions: tambah celengan, deposit, withdraw
-- Dark mode toggle
-
-### 2. Celengan Management
-- **Buat celengan baru**: Nama, target, icon, kategori, gambar motivasi (upload/URL)
-- **Edit celengan**: Update info tanpa kehilangan data transaksi
-- **Hapus celengan**: Konfirmasi dialog dengan warning
-
-### 3. Transaksi
-- **Deposit**: Tambah uang ke celengan
-- **Withdraw**: Tarik dana dengan validasi saldo
-- Format Rupiah otomatis (1.000.000)
-- Quick amount buttons (50K, 100K, 200K, 500K)
-- History transaksi dengan filter
-
-### 4. Visualisasi
-- Progress bar dinamis
-- Grafik line chart (trend tabungan)
-- Statistik: total collected, target, persentase
-
----
-
-## 🔒 Security
-
-- Row Level Security (RLS) di Supabase
-- User hanya bisa akses data milik sendiri
-- Auth token management otomatis
-- Secure environment variables
-
----
-
-## 📝 Environment Variables
-
-Buat file `.env.local` di root project:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
----
-
-## 🚢 Deployment
-
-### Vercel (Recommended)
-
-1. Push code ke GitHub
-2. Import project di [vercel.com](https://vercel.com)
-3. Tambahkan environment variables
-4. Deploy! 🎉
-
-### Manual Build
+### Build APK
 
 ```bash
 npm run build
-npm run start
+npx cap sync android
+npx cap open android
 ```
 
----
+Atau langsung build dari CLI:
 
-## 📱 Android App
-
-Celengin tersedia sebagai native Android app menggunakan **Tauri 2** dengan arsitektur hybrid WebView.
-
-### Download APK
-
-📥 [Download Celengin Android (ARM64)](https://github.com/TrisnoSanjaya/celengin/releases)
-
-**Cara Install:**
-1. Download APK dari Releases
-2. Transfer ke HP Android
-3. Buka file manager dan tap APK
-4. Allow "Install from Unknown Sources"
-5. Install dan buka app
-
-### Build Android dari Source
-
-Lihat dokumentasi lengkap di [TAURI_SETUP.md](./TAURI_SETUP.md) untuk:
-- Setup Tauri 2 development environment
-- Build APK untuk testing
-- Build release APK untuk production
-- Sign APK untuk Google Play Store
-
-**Quick build:**
 ```bash
-# Copy Rust library
-mkdir -p src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a
-cp src-tauri/target/aarch64-linux-android/release/libapp_lib.so src-tauri/gen/android/app/src/main/jniLibs/arm64-v8a/
-
-# Build APK
-cd src-tauri/gen/android
-export JAVA_HOME="C:/Program Files/Android/Android Studio/jbr"
-export ANDROID_HOME="$HOME/AppData/Local/Android/Sdk"
-./gradlew assembleArm64Release -x rustBuildArm64Release -x rustBuildArmRelease
+cd android
+set JAVA_HOME="C:/Program Files/Android/Android Studio/jbr"
+./gradlew assembleRelease
 ```
 
-**Catatan:** Android app adalah WebView yang load web app dari Vercel. App butuh koneksi internet untuk jalan.
+Output: `android/app/build/outputs/apk/release/app-release.apk`
 
----
+### Build AAB (Play Store)
 
-## 🤝 Contributing
+```bash
+cd android
+./gradlew bundleRelease
+```
 
-Contributions are welcome! Kalau ada ide fitur atau bug report:
+Output: `android/app/build/outputs/bundle/release/app-release.aab`
 
-1. Fork repository ini
-2. Buat branch baru (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push ke branch (`git push origin feature/amazing-feature`)
-5. Buka Pull Request
+## Deployment
 
----
+Karena Celengin **Offline-First**, bisa di-deploy ke static hosting mana pun:
 
-## 📄 License
+```bash
+npm run build
+```
 
-MIT License - feel free to use this project for personal or commercial purposes.
+Output static ada di folder `out/`. Upload ke Vercel, Netlify, GitHub Pages, atau hosting static lainnya.
 
----
+## License
 
-## 👨‍💻 Author
-
-**Trisno Sanjaya**
-
-Dibuat dengan ❤️ untuk semua yang ingin mengelola keuangan dengan lebih baik.
-
----
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org) - The React Framework
-- [Supabase](https://supabase.com) - Open Source Firebase Alternative
-- [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS Framework
-- [Lucide](https://lucide.dev) - Beautiful & Consistent Icons
-- [Recharts](https://recharts.org) - Composable Charting Library
-
----
-
-⭐ **Star repo ini kalau kamu suka!** Bantu orang lain menemukan Celengin 🚀
+MIT

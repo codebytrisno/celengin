@@ -7,15 +7,14 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CelenganCard } from '@/components/dashboard/celengan-card'
-import { createClient } from '@/lib/supabase/client'
 import { Wallet, TrendingUp, PiggyBank, PlusCircle, Target, Plus } from 'lucide-react'
 import { formatRupiah } from '@/lib/utils'
-import type { Celengan } from '@/lib/supabase/types'
+import { getCelengans } from '@/lib/db'
+import type { Celengan } from '@/lib/db'
 
 export default function DashboardPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const supabase = createClient()
   const [celengans, setCelengans] = useState<(Celengan & { collected: number })[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -32,39 +31,11 @@ export default function DashboardPage() {
     document.title = 'Dashboard - Celengin'
   }, [])
 
-  async function loadData() {
-    if (!user) return
+  function loadData() {
     setLoading(true)
-
-    try {
-      const { data: goals, error } = await supabase
-        .from('celengans')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error || !goals) {
-        setLoading(false)
-        return
-      }
-
-      const withCollected = await Promise.all(
-        goals.map(async (g) => {
-          try {
-            const { data } = await (supabase as any).rpc('get_collected', { celengan_id: g.id })
-            return { ...g, collected: (data as number) || 0 } as Celengan & { collected: number }
-          } catch {
-            return { ...g, collected: 0 } as Celengan & { collected: number }
-          }
-        })
-      )
-
-      setCelengans(withCollected)
-    } catch (err) {
-      console.error('Load data error:', err)
-    } finally {
-      setLoading(false)
-    }
+    const data = getCelengans()
+    setCelengans(data)
+    setLoading(false)
   }
 
   if (authLoading) {
@@ -78,9 +49,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (!user) {
-    return null
-  }
+  if (!user) return null
 
   const totalCollected = celengans.reduce((s, c) => s + c.collected, 0)
   const totalTarget = celengans.reduce((s, c) => s + c.target_amount, 0)
@@ -88,7 +57,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h2 className="font-heading text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Dashboard</h2>
@@ -102,7 +70,6 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
         <Card variant="clay">
           <CardContent className="pt-6">
@@ -147,7 +114,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Celengan List */}
       <div>
         <h3 className="font-heading text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
           <PiggyBank className="h-5 w-5 text-teal-500" />

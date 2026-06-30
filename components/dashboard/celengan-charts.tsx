@@ -2,7 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { formatRupiah } from '@/lib/utils'
-import type { Transaction } from '@/lib/supabase/types'
+import type { Transaction } from '@/lib/db'
 
 interface CelenganChartsProps {
   collected: number
@@ -14,18 +14,15 @@ export function CelenganCharts({ collected, target, transactions }: CelenganChar
   const remaining = Math.max(0, target - collected)
   const progress = Math.min(100, (collected / target) * 100)
 
-  // Data untuk pie chart
   const pieData = [
     { name: 'Terkumpul', value: collected },
     { name: 'Sisa Target', value: remaining },
   ]
 
-  // Data untuk bar chart (transaksi per hari, last 7 days)
   const getLast7Days = () => {
     const data: { [key: string]: number } = {}
     const today = new Date()
 
-    // Initialize last 7 days
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
@@ -33,7 +30,6 @@ export function CelenganCharts({ collected, target, transactions }: CelenganChar
       data[key] = 0
     }
 
-    // Sum transactions per day
     transactions.forEach((tx) => {
       const txDate = new Date(tx.date)
       const key = txDate.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })
@@ -52,7 +48,6 @@ export function CelenganCharts({ collected, target, transactions }: CelenganChar
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8">
-      {/* Pie Chart - Progress */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-700">
         <h3 className="font-heading font-semibold text-slate-800 dark:text-slate-200 mb-4 sm:mb-6 text-sm sm:text-base">Progress Penabungan</h3>
         
@@ -110,7 +105,6 @@ export function CelenganCharts({ collected, target, transactions }: CelenganChar
         </div>
       </div>
 
-      {/* Bar Chart - Transaksi 7 Hari */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-700">
         <h3 className="font-heading font-semibold text-slate-800 dark:text-slate-200 mb-4 sm:mb-6 text-sm sm:text-base">Aktivitas 7 Hari Terakhir</h3>
         

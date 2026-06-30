@@ -45,3 +45,15 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# Tauri (migrated to Capacitor)
+src-tauri/
+
+# Android (Capacitor) build outputs
+android/.gradle/
+android/build/
+android/app/build/
+android/celengin.keystore
+android/local.properties
+
+

@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
 import { Card, CardContent } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/client'
-import { PiggyBank, ArrowUpRight, ArrowDownRight, TrendingUp, Wallet, CalendarDays } from 'lucide-react'
+import { PiggyBank, ArrowUpRight, ArrowDownRight, TrendingUp, Wallet } from 'lucide-react'
 import { formatRupiah, formatDate } from '@/lib/utils'
-import type { Celengan, Transaction } from '@/lib/supabase/types'
+import { getCelengans, getTransactionsByCelenganIds } from '@/lib/db'
+import type { Transaction } from '@/lib/db'
 
 type ActivityItem = {
   id: string
@@ -22,7 +22,6 @@ type ActivityItem = {
 export default function AktivitasPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const supabase = createClient()
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'semua' | 'deposit' | 'withdrawal'>('semua')
@@ -36,28 +35,16 @@ export default function AktivitasPage() {
     loadActivities()
   }, [authLoading, user, router])
 
-  async function loadActivities() {
-    if (!user) return
-    
-    const { data: goals } = await supabase
-      .from('celengans')
-      .select('id, title, icon')
-      .eq('user_id', user.id)
+  function loadActivities() {
+    const goals = getCelengans()
 
-    if (!goals || goals.length === 0) {
+    if (goals.length === 0) {
       setLoading(false)
       return
     }
 
-    const celenganIds = goals.map(g => g.id)
-    const { data: transactions } = await supabase
-      .from('transactions')
-      .select('*')
-      .in('celengan_id', celenganIds)
-      .order('date', { ascending: false })
-      .limit(50)
-
-    if (!transactions) { setLoading(false); return }
+    const ids = goals.map(g => g.id)
+    const transactions = getTransactionsByCelenganIds(ids)
 
     const celenganMap = new Map(goals.map(g => [g.id, g]))
     const items: ActivityItem[] = transactions.map((t: Transaction) => {
@@ -68,7 +55,7 @@ export default function AktivitasPage() {
         amount: Math.abs(t.amount),
         note: t.note || null,
         celengan_title: cel?.title || 'Unknown',
-        celengan_icon: cel?.icon || '💰',
+        celengan_icon: cel?.icon || 'wallet',
         type: t.amount >= 0 ? 'deposit' : 'withdrawal',
       }
     })
@@ -86,13 +73,11 @@ export default function AktivitasPage() {
 
   return (
     <>
-      {/* Header */}
       <div className="mb-8">
         <h1 className="font-heading text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Aktivitas</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Riwayat transaksi tabungan kamu</p>
       </div>
 
-      {/* Summary */}
       {!loading && activities.length > 0 && (
         <div className="animate-scale-in grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <Card variant="clay">
@@ -131,7 +116,6 @@ export default function AktivitasPage() {
         </div>
       )}
 
-      {/* Filter */}
       {activities.length > 0 && (
         <div className="flex items-center gap-2 mb-6">
           {(['semua', 'deposit', 'withdrawal'] as const).map((f) => (
@@ -150,7 +134,6 @@ export default function AktivitasPage() {
         </div>
       )}
 
-      {/* Content */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map(i => (

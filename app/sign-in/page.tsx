@@ -1,123 +1,86 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mail, Lock, Loader2, PiggyBank } from 'lucide-react'
+import { PiggyBank, User } from 'lucide-react'
 
 export default function SignInPage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [user, setUser] = useState<{ full_name: string } | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     document.title = 'Masuk - Celengin'
+    try {
+      const raw = localStorage.getItem('celengin_user')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        setUser({ full_name: parsed.user_metadata?.full_name || parsed.email?.split('@')[0] || 'User' })
+      }
+    } catch { /* ignore */ }
+    setLoading(false)
   }, [])
 
-  async function handleSignIn(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-
-    // Full page redirect biar server baca cookie session baru
+  function handleContinue() {
     window.location.href = '/dashboard'
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500" />
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-slate-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo & Header */}
         <div className="text-center mb-8 animate-fade-in-up">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-500 text-white mb-4 shadow-lg shadow-teal-500/30">
             <PiggyBank className="h-8 w-8" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-slate-900 dark:text-white text-center">Masuk</h1>
-          <p className="text-slate-500 dark:text-slate-400">Masuk ke akun kamu</p>
+          <p className="text-slate-500 dark:text-slate-400">Lanjutkan menabung</p>
         </div>
 
-        {/* Form Card */}
         <Card variant="clay" className="animate-scale-in">
           <CardContent className="pt-8">
-            <form onSubmit={handleSignIn} className="space-y-5">
-              {/* Email */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
-                  <input
-                    type="email"
-                    placeholder="nama@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
-                    required
-                    autoFocus
-                  />
+            {user ? (
+              <div className="text-center space-y-6">
+                <div className="w-16 h-16 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center text-teal-600 dark:text-teal-300 font-bold text-2xl border-2 border-teal-200 dark:border-teal-700 mx-auto">
+                  {user.full_name[0].toUpperCase()}
                 </div>
+                <div>
+                  <p className="font-heading text-lg font-semibold text-slate-800 dark:text-white">{user.full_name}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Klik tombol di bawah untuk melanjutkan</p>
+                </div>
+                <Button variant="clay" size="lg" className="w-full" onClick={handleContinue}>
+                  Lanjut ke Dashboard
+                </Button>
+                <button
+                  onClick={() => { localStorage.removeItem('celengin_user'); window.location.reload() }}
+                  className="text-sm text-slate-400 hover:text-red-500 transition-colors"
+                >
+                  Ganti Profil
+                </button>
               </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
-                  <input
-                    type="password"
-                    placeholder="Masukkan password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
-                    required
-                  />
+            ) : (
+              <div className="text-center space-y-4">
+                <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-900/30 inline-flex mx-auto">
+                  <User className="h-8 w-8 text-teal-500" />
                 </div>
-              </div>
-
-              {/* Error */}
-              {error && (
-                <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-medium">
-                  {error}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <Button type="submit" variant="clay" size="lg" className="w-full" disabled={loading}>
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Masuk...
-                  </span>
-                ) : (
-                  'Masuk'
-                )}
-              </Button>
-            </form>
-
-            {/* Footer Links */}
-            <div className="mt-6 text-center space-y-2">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Belum punya akun?{' '}
-                <Link href="/sign-up" className="text-teal-600 hover:text-teal-700 font-semibold">
-                  Daftar
+                <p className="text-slate-600 dark:text-slate-400">Belum ada profil tersimpan</p>
+                <Link href="/sign-up">
+                  <Button variant="clay" size="lg" className="w-full">
+                    Buat Profil Baru
+                  </Button>
                 </Link>
-              </p>
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatRupiah, calcProgress, getStatus } from '@/lib/utils'
 import { ArrowRight, MoreVertical, Edit, Trash2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { deleteCelengan } from '@/lib/db'
 import { CelenganIconRenderer } from '@/lib/celengan-icons'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
@@ -27,29 +27,15 @@ export function CelenganCard({ id, title, target, collected, icon = 'wallet', on
   const [deleting, setDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
-  async function handleDelete() {
+  function handleDelete() {
     setDeleting(true)
     setMenuOpen(false)
 
-    try {
-      const { error } = await supabase
-        .from('celengans')
-        .delete()
-        .eq('id', id)
+    deleteCelengan(id)
 
-      if (error) throw error
-
-      setShowDeleteDialog(false)
-
-      // Callback ke parent untuk refresh data
-      if (onDelete) onDelete()
-    } catch (err: any) {
-      alert('Gagal hapus celengan: ' + err.message)
-      setDeleting(false)
-      setShowDeleteDialog(false)
-    }
+    setShowDeleteDialog(false)
+    if (onDelete) onDelete()
   }
 
   function toggleMenu(e: React.MouseEvent) {
@@ -61,7 +47,7 @@ export function CelenganCard({ id, title, target, collected, icon = 'wallet', on
   return (
     <>
     <Card variant="default" className={`shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative dark:border-slate-700 dark:bg-slate-800 ${deleting ? 'opacity-50 pointer-events-none' : ''}`}>
-      <Link href={`/celengan/${id}`} className="block">
+      <Link href={`/celengan?id=${id}`} className="block">
         <CardContent className="p-5 pt-5">
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3">
@@ -80,7 +66,6 @@ export function CelenganCard({ id, title, target, collected, icon = 'wallet', on
               </div>
             </div>
             
-            {/* Menu Dropdown */}
             <div className="relative">
               <button 
                 onClick={toggleMenu}
@@ -91,19 +76,17 @@ export function CelenganCard({ id, title, target, collected, icon = 'wallet', on
               
               {menuOpen && (
                 <>
-                  {/* Backdrop to close menu */}
                   <div 
                     className="fixed inset-0 z-10" 
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); }}
                   />
                   
-                  {/* Dropdown Menu */}
                   <div className="absolute right-0 top-8 z-20 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1 animate-scale-in">
                     <button
                       onClick={(e) => { 
                         e.preventDefault()
                         e.stopPropagation()
-                        router.push(`/celengan/${id}/edit`)
+                        router.push(`/celengan/edit?id=${id}`)
                       }}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left transition-colors"
                     >

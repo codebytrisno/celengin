@@ -29,7 +29,7 @@ export default function AktivitasPage() {
   useEffect(() => {
     if (authLoading) return
     if (!user) {
-      router.push('/sign-in')
+      router.push('/login')
       return
     }
     loadActivities()

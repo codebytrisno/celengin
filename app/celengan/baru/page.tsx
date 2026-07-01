@@ -48,7 +48,7 @@ export default function BaruCelenganPage() {
   }
 
   if (!user) {
-    router.push('/sign-in')
+    router.push('/login')
     return null
   }
 

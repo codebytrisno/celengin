@@ -57,7 +57,7 @@ function DetailCelenganPage() {
   useEffect(() => {
     if (authLoading) return
     if (!user) {
-      router.push('/sign-in')
+      router.push('/login')
       return
     }
     if (!id) return

@@ -102,10 +102,10 @@ export function Navbar() {
               </>
             ) : !loading ? (
               <>
-                <Link href="/sign-in" className="text-sm font-medium text-slate-600 hover:text-teal-500 dark:text-slate-400 dark:hover:text-teal-400 transition-colors">
+                <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-teal-500 dark:text-slate-400 dark:hover:text-teal-400 transition-colors">
                   Masuk
                 </Link>
-                <Link href="/sign-up">
+                <Link href="/register">
                   <Button variant="clay" size="md">Mulai Menabung</Button>
                 </Link>
               </>
@@ -200,13 +200,13 @@ export function Navbar() {
                 ) : !loading ? (
                   <>
                     <Link
-                      href="/sign-in"
+                      href="/login"
                       className="flex items-center gap-3 p-3 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
                     >
                       <User className="h-5 w-5" />
                       <span className="font-medium">Masuk</span>
                     </Link>
-                    <Link href="/sign-up" className="block">
+                    <Link href="/register" className="block">
                       <Button variant="clay" size="lg" className="w-full justify-center">
                         Mulai Menabung
                       </Button>

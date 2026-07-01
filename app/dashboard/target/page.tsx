@@ -20,7 +20,7 @@ export default function TargetPage() {
   useEffect(() => {
     if (authLoading) return
     if (!user) {
-      router.push('/sign-in')
+      router.push('/login')
       return
     }
     const data = getCelengans()

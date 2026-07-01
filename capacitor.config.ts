@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Celengin',
   webDir: 'out',
   server: {
-    androidScheme: 'https',
+    androidScheme: 'http',
   },
   plugins: {
     SplashScreen: {

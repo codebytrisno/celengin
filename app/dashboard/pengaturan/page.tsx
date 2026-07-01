@@ -11,10 +11,14 @@ import { exportJSON, exportCelengansCSV, exportTransactionsCSV, importFromJSON }
 export default function PengaturanPage() {
   const router = useRouter()
   const { user, loading: authLoading, signOut } = useAuth()
+  const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge')
+  const [importResult, setImportResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [importing, setImporting] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) router.push('/sign-in')
+    if (!user) router.push('/login')
   }, [authLoading, user, router])
 
   if (authLoading || !user) {
@@ -25,11 +29,6 @@ export default function PengaturanPage() {
       </div>
     )
   }
-
-  const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge')
-  const [importResult, setImportResult] = useState<{ success: boolean; message: string } | null>(null)
-  const [importing, setImporting] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
 
   const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
   const email = user.email || '-'
